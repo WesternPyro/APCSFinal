@@ -54,7 +54,7 @@ public class GameGraphics
 		g.setFont(new Font("Arial",Font.PLAIN,72));
 		g.drawString("GAME OVER",300,300);
 		g.setFont(new Font("Arial",Font.PLAIN,36));
-		g.drawString("Click once to return to the title screen.",225,375);
+		g.drawString("Click once to return to the title screen.",225,395);
 	}
 	
 	public static void win(Graphics g, int height)
@@ -62,9 +62,19 @@ public class GameGraphics
 		background(g,height);
 		g.setColor(Color.black);
 		g.setFont(new Font("Arial",Font.PLAIN,72));
+		g.drawString("Nice Job!",340,300);
+		g.setFont(new Font("Arial",Font.PLAIN,36));
+		g.drawString("Click once to continue to the next level.",207,375);
+	}
+	
+	public static void finalWin(Graphics g, int height)
+	{
+		background(g,height);
+		g.setColor(Color.black);
+		g.setFont(new Font("Arial",Font.PLAIN,72));
 		g.drawString("YOU WIN!",340,300);
 		g.setFont(new Font("Arial",Font.PLAIN,36));
-		g.drawString("Click once to return to the title screen.",215,375);
+		g.drawString("Click once to return to the title screen",215,375);
 	}
 
 	public static void background(Graphics g, int height)

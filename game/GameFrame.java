@@ -36,12 +36,12 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	protected int height,elevation,score;
 	protected int platformX,platformY,prevX,prevY,prevPlatY;
 	protected int numClicks;
-	protected static int difficulty;
+	protected static int difficulty,level;
 	protected static String dif;
 	protected static double velocity;
-	protected static boolean lose,win,tracking,reform;
+	protected static boolean lose,win,finalWin,tracking,reform;
 	protected static boolean gamePlay;
-	protected static ArrayList<Platform> platforms;
+	protected static ArrayList<Platform> platforms,removedPlatforms;
 	protected Image virtualMem;
 	protected Graphics gBuffer;
 	protected Random generate;
@@ -66,15 +66,18 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		height = 0;
 		elevation = 0;
 		difficulty = 7;
+		level = 1;
 		numClicks = 0;
 		lose = false;
 		win = false;
-		tracking = false;
+		finalWin = false;
+		tracking = true;
 		reform = false;
 		gamePlay = true;
 		generate = new Random();
 		format = new DecimalFormat("00000");
 		platforms = new ArrayList<Platform>();
+		removedPlatforms = new ArrayList<Platform>();
 		createPlatforms();
 		
 		try
@@ -96,7 +99,8 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		{
 			if(numClicks == 0) 
 			{ 
-				GameGraphics.title(gBuffer,height);   
+				GameGraphics.title(gBuffer,height);
+				score = 0;
 				lose = false;
 				win = false;
 			}
@@ -118,7 +122,8 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				height = 0;
 				velocity = 23;
 				numClicks = -1;
-				g.drawString("Your score was"+format.format(score),250,450);
+				level = 1;
+				gBuffer.drawString("Your score was "+score,350,360);
 				resetPlatforms();
 			}
 			else if(numClicks >= 1 && win)
@@ -128,6 +133,19 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				height = 0;
 				velocity = 23;
 				numClicks = -1;
+				if(level < 5 && ! tracking)
+					level++;
+				reform = true;
+				resetPlatforms();
+			}
+			else if(numClicks >= 1 && finalWin)
+			{
+				GameGraphics.finalWin(gBuffer,height);
+				elevation = 0;
+				height = 0;
+				velocity = 23;
+				numClicks = -1;
+				level = 1;
 				reform = true;
 				resetPlatforms();
 			}
@@ -176,15 +194,19 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				{
 					elevation = 700-platforms.get(c).tlY-32;
 					velocity = 23.0;
-					if(platforms.get(c) instanceof BreakPlatform)
+					if(platforms.get(c) instanceof BreakPlatform) {
+						removedPlatforms.add(platforms.get(c));
 						platforms.remove(c);
+					}
 					return;
 				}
 			}
 			if(elevation < -300)
 				lose = true;
-			if(elevation+height > -prevPlatY+1200)
+			if(elevation+height > -prevPlatY+1000 && tracking)
 				win = true;
+			else if(elevation+height > -prevPlatY+1200)
+				finalWin = true;
 		}
 		catch (NullPointerException e) {}
 	}
@@ -208,8 +230,8 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		}
 		else
 		{
-			height+=difficulty;
-			elevation-=difficulty;	
+			height+=difficulty+(level-1);
+			elevation-=difficulty+(level-1);	
 		}
 	}
 	
@@ -222,7 +244,10 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			g.setFont(new Font("Arial",Font.PLAIN,36));
 			g.setColor(Color.black);
 			g.drawString(("Score: "+format.format(score)),675,100);
-			g.drawString("Difficulty: "+getDifficulty(),100,100);
+			if(!tracking) {
+				g.drawString("Difficulty: "+getDifficulty(),100,100);
+				g.drawString("Level: "+level,100,140);
+			}
 		}
 		catch(NullPointerException e) {}
 	}
@@ -237,18 +262,21 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			platformY = generate.nextInt(500)-(c-1)*200;
 			if(platformY - prevPlatY < -300)
 				platformY = prevPlatY - 150;
-			int select = generate.nextInt(10);
+			int select;
+			if(140-c<=5)
+				select = generate.nextInt(9)+1;
+			else
+				select = generate.nextInt(10);
 			if(select == 0)
-				platforms.add(new MovePlatform(platformX,platformY));
+				platforms.add(new FallPlatform(platformX,platformY));
 			else if(select == 1)
 				platforms.add(new BreakPlatform(platformX,platformY));
 			else if(select == 2)
-				platforms.add(new FallPlatform(platformX,platformY));
+				platforms.add(new MovePlatform(platformX,platformY));
 			else
 				platforms.add(new Platform(platformX,platformY));
 			prevPlatY = platformY;
 		}
-		System.out.println(-prevPlatY);
 	}
 
 	
@@ -297,6 +325,10 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	
 	public void resetPlatforms()
 	{
+		for(int c = 0; c < removedPlatforms.size(); c++)
+			platforms.add(removedPlatforms.get(c));
+		for(int c = removedPlatforms.size()-1; c >= 0; c--)
+			removedPlatforms.remove(c);
 		if(reform)
 		{	
 			for(int c = platforms.size()-1; c >= 0; c--)
