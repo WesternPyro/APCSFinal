@@ -17,8 +17,8 @@ public class StartMenu extends JFrame implements ActionListener
 	
 	public StartMenu()
 	{
-		staticMove = new JButton("Static");
-		trackingMove = new JButton("Tracking");
+		staticMove = new JButton("Scrolling");
+		trackingMove = new JButton("Free Play");
 		
 		startMenu.setSize(120, 90);
 		startMenu.setLocationRelativeTo(null);
@@ -45,6 +45,7 @@ public class StartMenu extends JFrame implements ActionListener
 		staticMove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Mechanics.tracking = false;
+				Mechanics.reform = true;
 				startMenu.dispose();
 				Mechanics.gamePlay = true;
 		}});

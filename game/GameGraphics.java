@@ -81,7 +81,7 @@ public class GameGraphics
 	{
 		try
 		{
-			g.setColor(new Color(138,205,255));
+			g.setColor(new Color(15,174,221));
 			g.fillRect(0,0,1000,900);
 			ground(g,height);
 			for(int c = 0; c < clouds.size(); c++)

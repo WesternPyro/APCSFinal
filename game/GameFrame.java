@@ -36,12 +36,13 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	protected int height,elevation,score;
 	protected int platformX,platformY,prevX,prevY,prevPlatY;
 	protected int numClicks;
-	protected int count;
+	protected int count,top;
+	protected int fallCount;
 	protected static int difficulty,level;
 	protected static String dif;
 	protected static double velocity;
 	protected static boolean lose,win,finalWin,tracking,reform;
-	protected static boolean gamePlay;
+	protected static boolean gamePlay,levelCompleted;
 	protected static ArrayList<Platform> platforms,removedPlatforms;
 	protected Image virtualMem;
 	protected Graphics gBuffer;
@@ -62,11 +63,14 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		menuInit();
 		velocity = 23;
 		mouseX = 0;
+		platformX = platformY = 0;
 		prevX = 0;
 		prevY = 0;
 		height = 0;
 		elevation = 0;
 		count = 0;
+		top = 0;
+		fallCount = 0;
 		difficulty = 7;
 		level = 1;
 		numClicks = 0;
@@ -103,60 +107,75 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			{ 
 				GameGraphics.title(gBuffer,height);
 				score = 0;
+				elevation = 0;
+				height = 0;
+				velocity = 23;
 				lose = false;
 				win = false;
 			}
-			else if(numClicks >= 1 && !lose && !win)
-			{	
-				GameGraphics.background(gBuffer,height);
-				GameGraphics.sprite(gBuffer,mouseX,elevation);
-				drawPlatforms(gBuffer,height);
-				checkBounce(mouseX,elevation,prevX,prevY);
-				setVelocity();
-				moveScreen();
-				getScore(gBuffer);
-				delay(1000/80);
-			}
-			else if(numClicks >= 1 && lose) 
-			{ 
-				GameGraphics.lose(gBuffer,height); 
-				elevation = 0;
-				height = 0;
-				velocity = 23;
-				numClicks = -1;
-				level = 1;
-				gBuffer.drawString("Your score was "+score,350,360);
-				resetPlatforms();
-			}
-			else if(numClicks >= 1 && win && !tracking)
-			{
-				GameGraphics.win(gBuffer,height);
-				elevation = 0;
-				height = 0;
-				velocity = 23;
-				numClicks = -1;
-				if(level < 5)
-					level++;
-				reform = true;
-				resetPlatforms();
-			}
-			else if(numClicks >= 1 && finalWin && !tracking)
-			{
-				GameGraphics.finalWin(gBuffer,height);
-				elevation = 0;
-				height = 0;
-				velocity = 23;
-				numClicks = -1;
-				level = 1;
-				reform = true;
-				resetPlatforms();
-			}
+			else if(!(lose||win)) 			{ runGame(); }
+			else if(lose && tracking) 		{ trackingLose(); }
+			else if(lose && !tracking) 		{ staticLose(); }
+			else if(win && !tracking) 		{ levelWin(); }
+			else if(finalWin && !tracking) 	{ finalWin(); }
+			
 			g.drawImage(virtualMem,0,0,null);
 		}
 		repaint();
 	}
 
 	public void update(Graphics g)	{ paint(g); }
+	
+	public void runGame()
+	{
+		GameGraphics.background(gBuffer,height);
+		GameGraphics.sprite(gBuffer,mouseX,elevation);
+		drawPlatforms(gBuffer,height);
+		checkBounce(mouseX,elevation,prevX,prevY);
+		setVelocity();
+		moveScreen();
+		getScore(gBuffer);
+		delay(1000/65);
+	}
+	
+	public void trackingLose()
+	{
+		GameGraphics.lose(gBuffer,height); 
+		numClicks = -1;
+		gBuffer.drawString("Your score was "+score,350,360);
+		reform = true;
+		resetPlatforms();
+	}
+	
+	public void staticLose()
+	{
+		GameGraphics.lose(gBuffer,height);
+		numClicks = -1;
+		level = 1;
+		resetPlatforms();
+	}
+	
+	public void levelWin()
+	{
+		GameGraphics.win(gBuffer,height);
+		numClicks = -1;
+		if(levelCompleted) {
+			if(level < 5)
+				level++;
+			reform = true;
+			resetPlatforms();
+		}
+		levelCompleted = false;
+	}
+	
+	public void finalWin()
+	{
+		GameGraphics.finalWin(gBuffer,height);
+		numClicks = -1;
+		level = 1;
+		reform = true;
+		resetPlatforms();
+	}
 	
 	public void delay(int n)
 	{
@@ -205,8 +224,10 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			}
 			if(elevation < -300)
 				lose = true;
-			if(elevation+height > -prevPlatY+1000 && !tracking)
-				win = true;
+			if(elevation+height > -prevPlatY+1000 && !tracking) {
+				win = true;		
+				levelCompleted = true;
+			}
 			else if(elevation+height > -prevPlatY+1200)
 				finalWin = true;
 		}
@@ -228,6 +249,8 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				int diff=250-(700-elevation);
 				height+=diff;
 				elevation-=diff;
+				if(elevation+height > -(prevPlatY+1000))
+					addPlat();
 			}
 		}
 		else
@@ -256,8 +279,6 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	
 	public void createPlatforms()
 	{
-		int platformX = 0;
-		int platformY = 0;
 		while(count < 140)
 		{
 			platformX = generate.nextInt(880)+10;
@@ -265,7 +286,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			if(platformY - prevPlatY < -300)
 				platformY = prevPlatY - 150;
 			int select;
-			if(140-count<=5)
+			if(140-count<=5 || fallCount>0)
 				select = generate.nextInt(9)+1;
 			else
 				select = generate.nextInt(10);
@@ -277,9 +298,15 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				platforms.add(new MovePlatform(platformX,platformY));
 			else
 				platforms.add(new Platform(platformX,platformY));
+			if(platforms.get(platforms.size()-1) instanceof FallPlatform)
+				fallCount++;
+			else
+				fallCount = 0;
 			prevPlatY = platformY;
 			count++;
 		}
+		top = prevPlatY+1000;
+		System.out.println(prevPlatY);
 	}
 
 	
@@ -351,6 +378,39 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	{
 		start = new StartMenu();
 		diff = new DifficultyMenu();
+	}
+	
+	public void addPlat()
+	{
+		for(int c = 0; c < 5; c++) {
+			platformX = generate.nextInt(880)+10;
+			platformY = generate.nextInt(500)-(count-1)*200;
+			if(platformY - prevPlatY < -300)
+				platformY = prevPlatY - 150;
+			int select;
+			if(140-count<=5 || count>0)
+				select = generate.nextInt(9)+1;
+			else
+				select = generate.nextInt(10);
+			if(select == 0)
+				platforms.add(new FallPlatform(platformX,platformY));
+			else if(select == 1)
+				platforms.add(new BreakPlatform(platformX,platformY));
+			else if(select == 2)
+				platforms.add(new MovePlatform(platformX,platformY));
+			else
+				platforms.add(new Platform(platformX,platformY));
+			prevPlatY = platformY;
+			count++;
+			platforms.remove(0);
+		}
+		if(platforms.size() > 140)
+		{
+			int diff = platforms.size()-140;
+			for(int c = 0; c < diff; c++)
+				platforms.remove(0);
+		}
+		top = prevPlatY+1000;
 	}
 	
 	public void mouseEntered(MouseEvent e)  {}
