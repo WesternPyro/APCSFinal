@@ -54,6 +54,10 @@ public class DifficultyMenu extends JFrame implements ActionListener
 		one.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Mechanics.difficulty = 5;
+				if(!Mechanics.tracking) {
+					Mechanics.lose = true;
+					Mechanics.reform = true;
+				}
 				diffMenu.dispose();
 				Mechanics.gamePlay = true;
 		}});
@@ -62,6 +66,10 @@ public class DifficultyMenu extends JFrame implements ActionListener
 		two.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Mechanics.difficulty = 7;
+				if(!Mechanics.tracking) {
+					Mechanics.lose = true;
+					Mechanics.reform = true;
+				}
 				diffMenu.dispose();
 				Mechanics.gamePlay = true;
 		}});
@@ -70,6 +78,10 @@ public class DifficultyMenu extends JFrame implements ActionListener
 		three.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Mechanics.difficulty = 9;
+				if(!Mechanics.tracking) {
+					Mechanics.lose = true;
+					Mechanics.reform = true;
+				}
 				diffMenu.dispose();
 				Mechanics.gamePlay = true;
 		}});
@@ -78,6 +90,10 @@ public class DifficultyMenu extends JFrame implements ActionListener
 		four.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Mechanics.difficulty = 11;
+				if(!Mechanics.tracking) {
+					Mechanics.lose = true;
+					Mechanics.reform = true;
+				}
 				diffMenu.dispose();
 				Mechanics.gamePlay = true;
 		}});

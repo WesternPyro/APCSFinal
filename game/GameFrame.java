@@ -224,7 +224,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			}
 			if(elevation < -300)
 				lose = true;
-			if(elevation+height > -prevPlatY+1000 && !tracking) {
+			if(elevation+height > -prevPlatY+1200 && !tracking) {
 				win = true;		
 				levelCompleted = true;
 			}
@@ -286,7 +286,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			if(platformY - prevPlatY < -300)
 				platformY = prevPlatY - 150;
 			int select;
-			if(140-count<=5 || fallCount>0)
+			if(fallCount>1)
 				select = generate.nextInt(9)+1;
 			else
 				select = generate.nextInt(10);
@@ -298,7 +298,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				platforms.add(new MovePlatform(platformX,platformY));
 			else
 				platforms.add(new Platform(platformX,platformY));
-			if(platforms.get(platforms.size()-1) instanceof FallPlatform)
+			if(platforms.get(platforms.size()-1) instanceof FallPlatform) 
 				fallCount++;
 			else
 				fallCount = 0;
@@ -306,7 +306,6 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			count++;
 		}
 		top = prevPlatY+1000;
-		System.out.println(prevPlatY);
 	}
 
 	
@@ -388,7 +387,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			if(platformY - prevPlatY < -300)
 				platformY = prevPlatY - 150;
 			int select;
-			if(140-count<=5 || count>0)
+			if(fallCount>1)
 				select = generate.nextInt(9)+1;
 			else
 				select = generate.nextInt(10);
@@ -400,17 +399,15 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				platforms.add(new MovePlatform(platformX,platformY));
 			else
 				platforms.add(new Platform(platformX,platformY));
+			if(platforms.get(platforms.size()-1) instanceof FallPlatform) 
+				fallCount++;
+			else
+				fallCount = 0;
 			prevPlatY = platformY;
 			count++;
 			platforms.remove(0);
 		}
-		if(platforms.size() > 140)
-		{
-			int diff = platforms.size()-140;
-			for(int c = 0; c < diff; c++)
-				platforms.remove(0);
-		}
-		top = prevPlatY+1000;
+		top = prevPlatY+1200;
 	}
 	
 	public void mouseEntered(MouseEvent e)  {}

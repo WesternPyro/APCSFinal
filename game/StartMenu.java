@@ -45,6 +45,7 @@ public class StartMenu extends JFrame implements ActionListener
 		staticMove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Mechanics.tracking = false;
+				Mechanics.lose = true;
 				Mechanics.reform = true;
 				startMenu.dispose();
 				Mechanics.gamePlay = true;
@@ -54,6 +55,7 @@ public class StartMenu extends JFrame implements ActionListener
 		trackingMove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Mechanics.tracking = true;
+				Mechanics.lose = true;
 				startMenu.dispose();
 				Mechanics.gamePlay = true;
 		}});
