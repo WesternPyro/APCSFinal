@@ -436,10 +436,10 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	}	
 	
 	public static void findHighScore(int score) throws IOException {
-		if(!Mechanics.highWritten) {
+		if(!highWritten) {
 			HighScores.addScore(score);
-			Mechanics.highWritten = true;
-			Mechanics.getHighScore(HighScores.readScores());
+			highWritten = true;
+			getHighScore(HighScores.readScores());
 		}
 	}
 	
