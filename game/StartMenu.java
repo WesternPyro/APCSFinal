@@ -38,6 +38,7 @@ public class StartMenu extends JFrame implements ActionListener
 		startMenu.add(staticMove);
 		startMenu.add(trackingMove);
 	}
+	
 	public void actionPerformed(ActionEvent e) 	{}
 	
 	public void buttonListeners()

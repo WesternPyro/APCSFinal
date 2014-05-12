@@ -47,6 +47,7 @@ public class DifficultyMenu extends JFrame implements ActionListener
 		diffMenu.add(four);
 		diffMenu.add(newGame);
 	}
+	
 	public void actionPerformed(ActionEvent e) 	{}
 	
 	public void buttonListeners()

@@ -14,6 +14,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Random;
 import java.awt.geom.Line2D.Double;
+import java.io.IOException;
 
 import javax.swing.JFrame;
 
@@ -38,11 +39,11 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	protected int numClicks;
 	protected int count,top;
 	protected int fallCount;
-	protected static int difficulty,level;
+	protected static int difficulty,level,highScore;
 	protected static String dif;
 	protected static double velocity;
 	protected static boolean lose,win,finalWin,tracking,reform;
-	protected static boolean gamePlay,levelCompleted;
+	protected static boolean gamePlay,levelCompleted,highWritten;
 	protected static ArrayList<Platform> platforms,removedPlatforms;
 	protected Image virtualMem;
 	protected Graphics gBuffer;
@@ -50,6 +51,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	protected DecimalFormat format;
 	protected StartMenu start;
 	protected DifficultyMenu diff;
+	protected HighScores highScoreManager;
 
 	public Mechanics()
 	{
@@ -68,6 +70,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		prevY = 0;
 		height = 0;
 		elevation = 0;
+		highScore = 0;
 		count = 0;
 		top = 0;
 		fallCount = 0;
@@ -80,8 +83,11 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		tracking = true;
 		reform = false;
 		gamePlay = true;
+		highWritten = false;
 		generate = new Random();
 		format = new DecimalFormat("00000");
+		try { highScoreManager = new HighScores();
+		} catch (IOException e) {}
 		platforms = new ArrayList<Platform>();
 		removedPlatforms = new ArrayList<Platform>();
 		createPlatforms();
@@ -103,18 +109,12 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	{
 		if(gamePlay)
 		{
-			if(numClicks == 0) 
-			{ 
-				GameGraphics.title(gBuffer,height);
-				score = 0;
-				elevation = 0;
-				height = 0;
-				velocity = 23;
-				lose = false;
-				win = false;
-			}
+			if(numClicks == 0) 				{ title(); }
 			else if(!(lose||win)) 			{ runGame(); }
-			else if(lose && tracking) 		{ trackingLose(); }
+			else if(lose && tracking) { 
+				try { trackingLose(); } 
+				catch(IOException e) {} 
+			}
 			else if(lose && !tracking) 		{ staticLose(); }
 			else if(win && !tracking) 		{ levelWin(); }
 			else if(finalWin && !tracking) 	{ finalWin(); }
@@ -125,6 +125,18 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	}
 
 	public void update(Graphics g)	{ paint(g); }
+	
+	public void title()
+	{
+		GameGraphics.title(gBuffer,height);
+		score = 0;
+		elevation = 0;
+		height = 0;
+		velocity = 23;
+		lose = false;
+		win = false;
+		highWritten = false;
+	}
 	
 	public void runGame()
 	{
@@ -138,11 +150,12 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		delay(1000/65);
 	}
 	
-	public void trackingLose()
+	public void trackingLose() throws IOException
 	{
-		GameGraphics.lose(gBuffer,height); 
+		try { findHighScore(score);
+		} catch (IOException e) {}
+		GameGraphics.lose(gBuffer,height,score); 
 		numClicks = -1;
-		gBuffer.drawString("Your score was "+score,350,360);
 		reform = true;
 		resetPlatforms();
 	}
@@ -189,7 +202,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	{
 		prevY = elevation;
 
-		if(velocity > -22.5)
+		if(velocity >= -22.5)
 			velocity -= .5;
 		
 		elevation += velocity;
@@ -224,11 +237,11 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			}
 			if(elevation < -300)
 				lose = true;
-			if(elevation+height > -prevPlatY+1200 && !tracking) {
+			if(elevation+height > -prevPlatY+1100 && !tracking && level < 5) {
 				win = true;		
 				levelCompleted = true;
 			}
-			else if(elevation+height > -prevPlatY+1200)
+			else if(elevation+height > -prevPlatY+1100)
 				finalWin = true;
 		}
 		catch (NullPointerException e) {}
@@ -268,11 +281,12 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				score = elevation+height;
 			g.setFont(new Font("Arial",Font.PLAIN,36));
 			g.setColor(Color.black);
-			g.drawString(("Score: "+format.format(score)),675,100);
 			if(!tracking) {
 				g.drawString("Difficulty: "+getDifficulty(),100,100);
 				g.drawString("Level: "+level,100,140);
 			}
+			else
+				g.drawString(("Score: "+format.format(score)),675,100);
 		}
 		catch(NullPointerException e) {}
 	}
@@ -286,7 +300,7 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 			if(platformY - prevPlatY < -300)
 				platformY = prevPlatY - 150;
 			int select;
-			if(fallCount>1)
+			if(fallCount>1 || count > 135)
 				select = generate.nextInt(9)+1;
 			else
 				select = generate.nextInt(10);
@@ -308,7 +322,6 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 		top = prevPlatY+1000;
 	}
 
-	
 	public void keyPressed(KeyEvent e)
 	{
 		int keyCode = e.getKeyCode();		
@@ -405,9 +418,29 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 				fallCount = 0;
 			prevPlatY = platformY;
 			count++;
-			platforms.remove(0);
+			if(score >= 400000) {
+				if(c < 4)
+					platforms.remove(0);
+			}
+			else
+				platforms.remove(0);	
 		}
 		top = prevPlatY+1200;
+	}
+	
+	public static void getHighScore(ArrayList<Integer> highScores) {
+		for(int c = 0; c < highScores.size(); c++) {
+			if(highScores.get(c).intValue() > highScore)
+				highScore = highScores.get(c).intValue();
+		}
+	}	
+	
+	public static void findHighScore(int score) throws IOException {
+		if(!Mechanics.highWritten) {
+			HighScores.addScore(score);
+			Mechanics.highWritten = true;
+			Mechanics.getHighScore(HighScores.readScores());
+		}
 	}
 	
 	public void mouseEntered(MouseEvent e)  {}
@@ -417,6 +450,6 @@ class Mechanics extends JFrame implements MouseListener, MouseMotionListener, Ke
 	public void mouseMoved(MouseEvent e)	{ prevX = mouseX; mouseX = e.getX(); }	
 	public void mouseClicked(MouseEvent e)  { prevX = mouseX; mouseX = e.getX(); numClicks++; }
 	public void mouseDragged(MouseEvent e)  { prevX = mouseX; mouseX = e.getX(); numClicks++; }
-	public void keyReleased(KeyEvent arg0) 	{}
-	public void keyTyped(KeyEvent arg0) 	{}
+	public void keyReleased(KeyEvent e) 	{}
+	public void keyTyped(KeyEvent e) 		{}
 }

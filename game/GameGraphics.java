@@ -14,17 +14,19 @@ public class GameGraphics
 	private static Random generate;
 	private static ArrayList<Cloud> clouds;
 	private static Image sprite;
+	private static int numClouds;
 
 	public static void init()
 	{
 		generate = new Random();
-
 		clouds = new ArrayList<Cloud>();
-		for(int c = 0; c < 100; c++)
+		numClouds = 0;
+		while(numClouds < 140)
 		{
 			int x = generate.nextInt(950);
 			int y = generate.nextInt(23000)-22500;
 			clouds.add(new Cloud(x,y));
+			numClouds++;
 		}
 		
 		try	{ sprite = ImageIO.read(new File("rocketship.png")); }
@@ -43,6 +45,7 @@ public class GameGraphics
 			g.drawString("Press the space bar to pause the game.",190,330);
 			g.drawString("Press 'M' to open up the screen movement menu.",120,370);
 			g.drawString("Click the left mouse button to continue.",205,410);
+			g.drawString("A game by Eric Noe and Trevor Crawley",185,600);
 		}
 		catch (NullPointerException e) {}
 	}
@@ -55,6 +58,18 @@ public class GameGraphics
 		g.drawString("GAME OVER",300,300);
 		g.setFont(new Font("Arial",Font.PLAIN,36));
 		g.drawString("Click once to return to the title screen.",225,395);
+	}
+	
+	public static void lose(Graphics g, int height, int score)
+	{
+		background(g,height);
+		g.setColor(Color.black);
+		g.setFont(new Font("Arial",Font.PLAIN,72));
+		g.drawString("GAME OVER",300,300);
+		g.setFont(new Font("Arial",Font.PLAIN,36));
+		g.drawString("Click once to return to the title screen.",225,395);
+		g.drawString("Your score was "+score,350,360);
+		g.drawString("High Score: "+Mechanics.highScore,375,440);
 	}
 	
 	public static void win(Graphics g, int height)
@@ -96,5 +111,7 @@ public class GameGraphics
 		g.fillRect(0,750+height,1000,150);
 	}
 
-	public static void sprite(Graphics g, int mouseX, double elevation) { g.drawImage(sprite,mouseX-21,700-(int)elevation-32,null); }
+	public static void sprite(Graphics g, int mouseX, double elevation) throws NullPointerException { 
+		g.drawImage(sprite,mouseX-21,700-(int)elevation-32,null); 
+	}
 }
